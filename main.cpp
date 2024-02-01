@@ -11,10 +11,11 @@ int main() {
     std::cout << -a << std::endl;
     std::cout << a * b << std::endl;
     std::cout << a + b << std::endl;
+    std::cout << (a > b) << " " << (b > a) << std::endl;
     std::cout << a - b << std::endl;
     std::cout << b - a << std::endl;
     std::cout << b / a << std::endl;
     std::cout << b / c << std::endl;
-    std::cout << "123"_LF / "345"_LF << std::endl;
+    std::cout << 123_LF / 345_LF << std::endl;
     return 0;
 }
