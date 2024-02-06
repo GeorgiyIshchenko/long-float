@@ -102,7 +102,7 @@ namespace LongNums {
 
     LongFloat LongFloat::operator-() const {
         LongFloat result;
-        result.sign *= -1;
+        result.sign = -1 * sign;
         result.exponent = exponent;
         result.nums = std::vector<int>(nums);
         return result;
@@ -118,10 +118,10 @@ namespace LongNums {
 
         for (size_t iter = 0; iter < minNumSize; iter++) {
             if (lf1.nums[iter] != lf2.nums[iter]) {
-                return (lf1.nums[iter] > lf2.nums[iter]) ^ (lf1.sign == -1);
+                return (lf1.nums[iter] > lf2.nums[iter]) * (lf1.sign == 1);
             }
         }
-        return false;
+        return lf1.nums.size() > lf2.nums.size();
     }
 
     LongFloat operator+(const LongFloat &lf1, const LongFloat &lf2) {
@@ -222,7 +222,7 @@ namespace LongNums {
             return result;
         }
         if (lf1.sign == -1 && lf2.sign == -1)
-            return (-lf2) - (-(lf1));
+            return (-lf2) - (-lf1);
         return lf1 + (-lf2);
     }
 
@@ -269,8 +269,6 @@ namespace LongNums {
     }
 
     bool operator==(const LongFloat &lf1, const LongFloat &lf2) {
-        if (lf1.sign != lf2.sign)
-            return false;
         if (lf1.exponent != lf2.exponent)
             return false;
         if (lf1.nums.size() != lf2.nums.size())
@@ -302,7 +300,6 @@ namespace LongNums {
         LongFloat lf2_inverse = LongFloat(lf2).getReciprocal();
         LongFloat result = lf1 * lf2_inverse;
 
-        // А ВЫ ЗНАЛИ ЧТО 1 = 0.(9)? Я ДА!
         size_t iter = result.nums.size() - 1 - MAX(0, lf1.exponent);
         size_t n = MAX(0, result.exponent);
 
@@ -355,6 +352,24 @@ namespace LongNums {
 
     LongFloat operator ""_LF(const char *str) {
         return LongFloat(std::string(str));
+    }
+
+    int LongFloat::getPrecision() const {
+        return precision;
+    }
+
+    void LongFloat::setPrecision(int value) {
+        nums.resize(value + 1);
+        if (value > 0)
+            precision = value;
+    }
+
+    int LongFloat::getExponent() const {
+        return exponent;
+    }
+
+    void LongFloat::setExponent(int value) {
+        exponent = value;
     }
 
 }

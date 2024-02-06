@@ -18,17 +18,11 @@ namespace LongNums {
         /// In present i will modify it to bigger notation
         const int base = 10;
 
-        /// Max amount of nums after dot
-        const int precision = 1000;
-
         /// Translate char to int
         static inline int charToInt(char charValue);
 
         /// Translate int to chat
         static inline char intToChar(int intValue);
-
-    public:
-
 
         /// Sign of number
         char sign;
@@ -37,8 +31,16 @@ namespace LongNums {
         /// Amount of nums after dot
         int exponent;
 
+    private:
+
+        /// Max amount of nums after dot
+        int precision = 1000;
+
+    public:
         /// Empty constructor
         LongFloat();
+        /// Double constructor
+        LongFloat(double num) : LongFloat(std::to_string(num)) {}
         /// String constructor
         explicit LongFloat(const std::string& value);
         /// Delete zeros from the beginning and the end of LongFloat
@@ -52,6 +54,7 @@ namespace LongNums {
 
         LongFloat& operator=(const LongFloat& other);
 
+
         LongFloat operator-() const;
         friend std::ostream& operator<<(std::ostream& os, const LongFloat& lf);
         friend bool operator>(const LongFloat& lf1, const LongFloat& lf2);
@@ -61,6 +64,17 @@ namespace LongNums {
         friend LongFloat operator+(const LongFloat& lf1, const LongFloat& lf2);
         friend LongFloat operator*(const LongFloat& lf1, const LongFloat& lf2);
         friend LongFloat operator/(const LongFloat& lf1, const LongFloat& lf2);
+        friend LongFloat operator ""_LF(const char* str);
+
+        /// Getters and Setters
+
+        int getPrecision() const;
+
+        void setPrecision(int precision);
+
+        int getExponent() const;
+
+        void setExponent(int exponent);
     };
 
     /// My Literal
