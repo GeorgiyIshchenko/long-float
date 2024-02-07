@@ -15,7 +15,7 @@ git clone 'https://github.com/GeorgiyIshchenko/LongFloat'
 ```c++
 #include <iostream>
 
-#include "include/LongFloat.h"
+#include <LongFloat.h>
 
 using namespace LongNums;
 
