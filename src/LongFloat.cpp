@@ -1,15 +1,20 @@
-#include "../include/LongFloat.h"
-
-// TODO: spaceship operator
-// TODO: O(line) in greater
-
+#include <LongFloat.h>
 
 namespace LongNums {
+
+    int LongFloat::precision{ 100 };
+    int LongFloat::base{ 10 };
 
     LongFloat::LongFloat() {
         sign = 1;
         nums = std::vector<int>(1, 0);
         exponent = 1;
+    }
+
+    LongFloat::LongFloat(LongFloat const &lf) {
+        sign = lf.sign;
+        exponent = lf.exponent;
+        nums = std::vector<int>(lf.nums);
     }
 
     LongFloat::LongFloat(const std::string &value) {
@@ -91,8 +96,8 @@ namespace LongNums {
                 res.nums[i + j + 1] += lf1.nums[i] * lf2.nums[j];
 
         for (int i = len - 1; i > 0; i--) {
-            res.nums[i - 1] += res.nums[i] / lf1.base;
-            res.nums[i] %= lf1.base;
+            res.nums[i - 1] += res.nums[i] / LongFloat::base;
+            res.nums[i] %= LongFloat::base;
         }
 
         res.deleteZeros();
@@ -161,8 +166,8 @@ namespace LongNums {
                 result.nums[iter + 1] = nums1[iter] + nums2[iter];
 
             for (size_t iter = len - 1; iter > 0; iter--) {
-                result.nums[iter - 1] += result.nums[iter] / lf1.base;
-                result.nums[iter] %= lf1.base;
+                result.nums[iter - 1] += result.nums[iter] / LongFloat::base;
+                result.nums[iter] %= LongFloat::base;
             }
             result.exponent = maxExp + 1;
             result.deleteZeros();
@@ -252,7 +257,7 @@ namespace LongNums {
         result.exponent -= one.exponent - 1;
 
         size_t numSize = 0;
-        size_t totalPrecision = precision + MAX(0, result.exponent);
+        size_t totalPrecision = LongFloat::precision + MAX(0, result.exponent);
 
         do {
             int div = 0;
@@ -337,7 +342,7 @@ namespace LongNums {
 
             if (iter < nums.size()) {
                 result += ".";
-                while (iter < nums.size())
+                while (iter < nums.size()  && iter < precision + 1)
                     result += intToChar(nums[iter++]);
             }
         } else {
@@ -354,12 +359,11 @@ namespace LongNums {
         return LongFloat(std::string(str));
     }
 
-    int LongFloat::getPrecision() const {
-        return precision;
+    int LongFloat::getPrecision(){
+        return LongFloat::precision;
     }
 
     void LongFloat::setPrecision(int value) {
-        nums.resize(value + 1);
         if (value > 0)
             precision = value;
     }
@@ -370,6 +374,23 @@ namespace LongNums {
 
     void LongFloat::setExponent(int value) {
         exponent = value;
+    }
+
+    LongFloat LongFloat::sqrt() {
+        if (sign == 1) {
+            LongFloat L{};
+            LongFloat R = LongFloat(*this);
+            LongFloat result;
+            for (int i = 0; i < 5 * precision; i++) {
+                result = (L + R) / 2_LF;
+                if (result * result < *this)
+                    L = result;
+                else
+                    R = result;
+            }
+            return result;
+        }
+        return NAN;
     }
 
 }
