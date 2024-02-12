@@ -2,7 +2,7 @@
 
 namespace LongNums {
 
-    int LongFloat::precision{ 100 };
+    int LongFloat::precision{ 1000 };
     int LongFloat::base{ 10 };
 
     LongFloat::LongFloat() {
@@ -54,6 +54,7 @@ namespace LongNums {
     }
 
     void LongFloat::deleteZeros() {
+
         size_t len = MAX(1, exponent);
 
         while (len < nums.size() && nums[nums.size() - 1] == 0)
@@ -119,14 +120,22 @@ namespace LongNums {
         if (lf1.exponent != lf2.exponent)
             return (lf1.exponent > lf2.exponent) ^ (lf1.sign == -1);
 
-        size_t minNumSize = MIN(lf1.nums.size(), lf2.nums.size());
+        std::vector<int> nums1(lf1.nums);
+        std::vector<int> nums2(lf2.nums);
+        size_t maxNumSize = MAX(nums1.size(), nums2.size());
 
-        for (size_t iter = 0; iter < minNumSize; iter++) {
-            if (lf1.nums[iter] != lf2.nums[iter]) {
-                return (lf1.nums[iter] > lf2.nums[iter]) * (lf1.sign == 1);
+        while (nums1.size() != maxNumSize)
+            nums1.push_back(0);
+
+        while (nums2.size() != maxNumSize)
+            nums2.push_back(0);
+
+        for (size_t iter = 0; iter < maxNumSize; iter++) {
+            if (nums1[iter] != nums2[iter]) {
+                return (nums1[iter] > nums2[iter]) ^ (lf1.sign == -1);
             }
         }
-        return lf1.nums.size() > lf2.nums.size();
+        return false;
     }
 
     LongFloat operator+(const LongFloat &lf1, const LongFloat &lf2) {
@@ -257,7 +266,7 @@ namespace LongNums {
         result.exponent -= one.exponent - 1;
 
         size_t numSize = 0;
-        size_t totalPrecision = LongFloat::precision + MAX(0, result.exponent);
+        size_t totalPrecision = MAX(LongFloat::precision, 500) + MAX(0, result.exponent);
 
         do {
             int div = 0;
@@ -273,23 +282,37 @@ namespace LongNums {
         return result;
     }
 
-    bool operator==(const LongFloat &lf1, const LongFloat &lf2) {
-        if (lf1.exponent != lf2.exponent)
-            return false;
-        if (lf1.nums.size() != lf2.nums.size())
-            return false;
-        for (size_t i = 0; i < lf1.nums.size(); i++)
-            if (lf1.nums[i] != lf2.nums[i])
-                return false;
-        return true;
-    }
+    int operator<=>(const LongFloat &lf1, const LongFloat &lf2) {
+        if (lf1.sign != lf2.sign)
+        {
+            return (lf1.sign < lf2.sign) ? -1 : 1;
+        }
 
-    std::strong_ordering operator<=>(const LongFloat &lf1, const LongFloat &lf2) {
-        if (lf2 > lf1)
-            return std::strong_ordering::less;
-        if (lf1 == lf2)
-            return std::strong_ordering::equal;
-        return std::strong_ordering::greater;
+        if (lf1.exponent != lf2.exponent)
+        {
+            return ((lf1.exponent > lf2.exponent) ^ (lf1.sign) ? -1: 1);
+        }
+
+        LongFloat lf1Copy{ lf1 };
+        LongFloat lf2Copy{ lf2 };
+        while (lf1Copy.nums.size() > lf2Copy.nums.size())
+        {
+            lf2Copy.nums.push_back(0);
+        }
+
+        while (lf1Copy.nums.size() < lf2Copy.nums.size())
+        {
+            lf1Copy.nums.push_back(0);
+        }
+
+        for (int32_t i{ 0 }; i < std::min(LongFloat::getPrecision(), (int)lf1.nums.size()); i++)
+        {
+            if (lf1Copy.nums[i] != lf2Copy.nums[i])
+            {
+                return ((lf1Copy.nums[i] > lf2Copy.nums[i]) ^ ((lf1Copy.sign) ? -1 : 1));
+            }
+        }
+        return 0;
     }
 
     LongFloat &LongFloat::operator=(const LongFloat &other) {
@@ -320,6 +343,7 @@ namespace LongNums {
                 result.nums[iter]++;
             }
         }
+        result.deleteZeros();
         return result;
     }
 
@@ -342,15 +366,15 @@ namespace LongNums {
 
             if (iter < nums.size()) {
                 result += ".";
-                while (iter < nums.size()  && iter < precision + 1)
+                while (iter < nums.size() && iter < precision + exponent)
                     result += intToChar(nums[iter++]);
             }
         } else {
             result += "0.";
             for (int i = 0; i < -exponent; i++)
                 result += "0";
-            for (int i: nums)
-                result += intToChar(i);
+            for (int i = 0; i < precision + exponent; i++)
+                result += intToChar(nums[i]);
         }
         return result;
     }
@@ -368,14 +392,6 @@ namespace LongNums {
             precision = value;
     }
 
-    int LongFloat::getExponent() const {
-        return exponent;
-    }
-
-    void LongFloat::setExponent(int value) {
-        exponent = value;
-    }
-
     LongFloat LongFloat::sqrt() {
         if (sign == 1) {
             LongFloat L{};
@@ -391,6 +407,10 @@ namespace LongNums {
             return result;
         }
         return NAN;
+    }
+
+    bool operator==(const LongFloat &lf1, const LongFloat &lf2) {
+        return lf1.toString() == lf2.toString();
     }
 
 }

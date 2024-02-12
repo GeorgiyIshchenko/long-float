@@ -35,6 +35,9 @@ namespace LongNums {
         /// Amount of nums after dot
         int exponent;
 
+        /// Delete zeros from the beginning and the end of LongFloat
+        void deleteZeros();
+
     public:
         /// Empty constructor
         LongFloat();
@@ -52,9 +55,6 @@ namespace LongNums {
 
         LongFloat(double num) : LongFloat(std::to_string(num)) {}
 
-        /// Delete zeros from the beginning and the end of LongFloat
-        void deleteZeros();
-
         /// @return 1 / LongFloat
         LongFloat getReciprocal();
 
@@ -71,9 +71,8 @@ namespace LongNums {
 
         friend bool operator>(const LongFloat &lf1, const LongFloat &lf2);
 
+        friend int operator<=>(const LongFloat &lf1, const LongFloat &lf2);
         friend bool operator==(const LongFloat &lf1, const LongFloat &lf2);
-
-        friend std::strong_ordering operator<=>(const LongFloat &lf1, const LongFloat &lf2);
 
         friend LongFloat operator-(const LongFloat &lf1, const LongFloat &lf2);
 
@@ -92,10 +91,6 @@ namespace LongNums {
         static int getPrecision();
 
         static void setPrecision(int precision);
-
-        int getExponent() const;
-
-        void setExponent(int exponent);
     };
 
     /// My Literal

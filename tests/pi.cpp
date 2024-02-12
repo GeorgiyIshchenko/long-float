@@ -41,25 +41,27 @@ int main(int argc, char *argv[]) {
     }
     else
     {
-        LongFloat::setPrecision(100);
+        LongFloat::setPrecision(1000);
     }
 
     auto start{std::chrono::high_resolution_clock::now()};
 
-    LongFloat pi = chudnovsky(std::max(100ll, LongFloat::getPrecision() / 5ll));
+    LongFloat pi = chudnovsky(std::max(100ll, LongFloat::getPrecision() / 6ll));
 
     auto finish{std::chrono::high_resolution_clock::now()};
 
     auto delta{std::chrono::duration_cast<std::chrono::milliseconds>(
             finish - start)};
 
-    std::cout << "Pi: " << pi << std::endl;
+    auto TruePi = std::string(PI_STR);
+
+    std::cout << "Pi: " <<  TruePi.substr(0, LongFloat::getPrecision() + 2) << std::endl;
+    std::cout << "LF: " << pi << std::endl;
     std::cout << "Time spent: " << delta << std::endl;
 
     int cnt = 0;
-    auto TruePi = std::string(PI_STR);
     auto ResultPiAsString = pi.toString();
-    for(int i = 0; i < LongFloat::getPrecision() + 2; i++)
+    for(int i = 0; i < LongFloat::getPrecision(); i++)
     {
         if (TruePi[i] == ResultPiAsString[i])
             cnt++;
@@ -68,6 +70,9 @@ int main(int argc, char *argv[]) {
     }
 
     std::cout << "Total nums match: " << cnt << std::endl;
+
+    //std::cout << CHUDOVSKY_KOEF << std::endl;
+
 
     return 0;
 }
