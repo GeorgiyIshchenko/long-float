@@ -2,23 +2,23 @@
 
 namespace LongNums {
 
-    int LongFloat::precision{ 1000 };
-    int LongFloat::base{ 10 };
+    int LongFloat::precision{1000};
+    int LongFloat::base{10};
 
     LongFloat::LongFloat() {
         sign = 1;
-        nums = std::vector<int>(1, 0);
+        nums = std::vector<numType>(1, 0);
         exponent = 1;
     }
 
     LongFloat::LongFloat(LongFloat const &lf) {
         sign = lf.sign;
         exponent = lf.exponent;
-        nums = std::vector<int>(lf.nums);
+        nums = std::vector<numType>(lf.nums);
     }
 
     LongFloat::LongFloat(const std::string &value) {
-        int length = value.length();
+        size_t length = value.length();
         int index = 0;
 
         if (length && value[0] == '-') {
@@ -29,11 +29,11 @@ namespace LongNums {
         }
 
         // If numeric
-        exponent = length - index;
+        exponent = (long long) length - index;
 
         while (index < length) {
             if (value[index] != '.') {
-                nums.push_back(charToInt(value[index]));
+                nums.push_back(_charToInt(value[index]));
             } else {
                 if (sign == 1)
                     exponent = index;
@@ -43,32 +43,28 @@ namespace LongNums {
             index++;
         }
 
+        this->_deleteZeros();
     }
 
-    int LongFloat::charToInt(const char charValue) {
+    LongFloat::numType LongFloat::_charToInt(const char charValue) {
         return charValue - '0';
     }
 
-    char LongFloat::intToChar(const int intValue) {
-        return intValue + '0';
+    char LongFloat::_intToChar(const numType value) {
+        return (char) (value + '0');
     }
 
-    void LongFloat::deleteZeros() {
+    void LongFloat::_deleteZeros() {
 
-        size_t len = MAX(1, exponent);
-
-        while (len < nums.size() && nums[nums.size() - 1] == 0)
-            nums.erase(nums.end() - 1);
-
-        while (nums.size() > 1 && nums[0] == 0) {
-            exponent--;
-            nums.erase(nums.begin());
+        while (nums.size() > std::max(1ll, exponent) &&
+               !nums.back()) {
+            nums.pop_back();
         }
 
-        while (nums.size() > 1 && nums[nums.size() - 1] == 0)
-            nums.erase(nums.end() - 1);
-
-        // If got zero as a result turn it to a real zero
+        while (!nums.empty() && !nums.front()) {
+            nums.erase(nums.begin());
+            exponent--;
+        }
 
         if (nums.size() == 1 && nums[0] == 0) {
             sign = 1;
@@ -84,68 +80,46 @@ namespace LongNums {
     }
 
     LongFloat operator*(const LongFloat &lf1, const LongFloat &lf2) {
-        int len = lf1.nums.size() + lf2.nums.size();
+        size_t len = lf1.nums.size() + lf2.nums.size();
 
         LongFloat res;
 
         res.sign = lf1.sign * lf2.sign;
-        res.nums = std::vector<int>(len, 0);
+        res.nums = std::vector<LongFloat::numType>(len, 0);
         res.exponent = lf1.exponent + lf2.exponent;
 
         for (int i = 0; i < lf1.nums.size(); i++)
             for (int j = 0; j < lf2.nums.size(); j++)
                 res.nums[i + j + 1] += lf1.nums[i] * lf2.nums[j];
 
-        for (int i = len - 1; i > 0; i--) {
+        for (size_t i = len - 1; i > 0; i--) {
             res.nums[i - 1] += res.nums[i] / LongFloat::base;
             res.nums[i] %= LongFloat::base;
         }
 
-        res.deleteZeros();
+        res._deleteZeros();
 
         return res;
     }
 
     LongFloat LongFloat::operator-() const {
+        if (*this == 0_LF)
+            return *this;
         LongFloat result;
         result.sign = -1 * sign;
         result.exponent = exponent;
-        result.nums = std::vector<int>(nums);
+        result.nums = std::vector<numType>(nums);
         return result;
-    }
-
-    bool operator>(const LongFloat &lf1, const LongFloat &lf2) {
-        if (lf1.sign != lf2.sign)
-            return lf1.sign > lf2.sign;
-        if (lf1.exponent != lf2.exponent)
-            return (lf1.exponent > lf2.exponent) ^ (lf1.sign == -1);
-
-        std::vector<int> nums1(lf1.nums);
-        std::vector<int> nums2(lf2.nums);
-        size_t maxNumSize = MAX(nums1.size(), nums2.size());
-
-        while (nums1.size() != maxNumSize)
-            nums1.push_back(0);
-
-        while (nums2.size() != maxNumSize)
-            nums2.push_back(0);
-
-        for (size_t iter = 0; iter < maxNumSize; iter++) {
-            if (nums1[iter] != nums2[iter]) {
-                return (nums1[iter] > nums2[iter]) ^ (lf1.sign == -1);
-            }
-        }
-        return false;
     }
 
     LongFloat operator+(const LongFloat &lf1, const LongFloat &lf2) {
         if (lf1.sign == lf2.sign) {
-            int exp1 = lf1.exponent;
-            int exp2 = lf2.exponent;
+            long long exp1 = lf1.exponent;
+            long long exp2 = lf2.exponent;
             int maxExp = MAX(exp1, exp2);
 
-            std::vector<int> nums1(lf1.nums);
-            std::vector<int> nums2(lf2.nums);
+            std::vector<LongFloat::numType> nums1(lf1.nums);
+            std::vector<LongFloat::numType> nums2(lf2.nums);
 
             while (exp1 != maxExp) {
                 nums1.insert(nums1.begin(), 0);
@@ -169,7 +143,7 @@ namespace LongNums {
 
             LongFloat result;
             result.sign = lf1.sign;
-            result.nums = std::vector(len, 0);
+            result.nums = std::vector<LongFloat::numType>(len, 0);
 
             for (size_t iter = 0; iter < maxNumSize; iter++)
                 result.nums[iter + 1] = nums1[iter] + nums2[iter];
@@ -179,7 +153,7 @@ namespace LongNums {
                 result.nums[iter] %= LongFloat::base;
             }
             result.exponent = maxExp + 1;
-            result.deleteZeros();
+            result._deleteZeros();
             return result;
         }
         if (lf1.sign == -1)
@@ -190,12 +164,12 @@ namespace LongNums {
     LongFloat operator-(const LongFloat &lf1, const LongFloat &lf2) {
         if (lf1.sign == 1 && lf2.sign == 1) {
             bool aBiggerB = lf1 > lf2;
-            int exp1 = aBiggerB ? lf1.exponent : lf2.exponent;
-            int exp2 = aBiggerB ? lf2.exponent : lf1.exponent;
+            long long exp1 = aBiggerB ? lf1.exponent : lf2.exponent;
+            long long exp2 = aBiggerB ? lf2.exponent : lf1.exponent;
             int maxExp = MAX(exp1, exp2);
 
-            std::vector<int> nums1(aBiggerB ? lf1.nums : lf2.nums);
-            std::vector<int> nums2(aBiggerB ? lf2.nums : lf1.nums);
+            std::vector<LongFloat::numType> nums1(aBiggerB ? lf1.nums : lf2.nums);
+            std::vector<LongFloat::numType> nums2(aBiggerB ? lf2.nums : lf1.nums);
 
             while (exp1 != maxExp) {
                 nums1.insert(nums1.begin(), 0);
@@ -218,7 +192,7 @@ namespace LongNums {
             size_t len = 1 + maxNumSize;
             LongFloat result;
             result.sign = aBiggerB ? 1 : -1;
-            result.nums = std::vector(len, 0);
+            result.nums = std::vector<LongFloat::numType>(len, 0);
 
             for (size_t iter = 0; iter < maxNumSize; iter++)
                 result.nums[iter + 1] = nums1[iter] - nums2[iter];
@@ -231,7 +205,7 @@ namespace LongNums {
             }
 
             result.exponent = maxExp + 1;
-            result.deleteZeros();
+            result._deleteZeros();
 
             return result;
         }
@@ -241,20 +215,19 @@ namespace LongNums {
     }
 
     LongFloat LongFloat::getReciprocal() {
-
-        if (nums.size() == 1 && nums[0] == 0)
-            throw std::string("Division by zero!");
+        if (nums.size() == 1 && nums[0] == 0 || (nums.empty() && exponent == 0))
+            throw std::invalid_argument("Division by zero!");
 
         LongFloat copy(*this);
         copy.sign = 1;
-        LongFloat one("1");
+        LongFloat one(1);
 
         LongFloat result;
         result.sign = sign;
         result.exponent = 1;
-        result.nums = std::vector<int>();
+        result.nums = std::vector<numType>();
 
-        while (one > copy) {
+        while (copy < 1) {
             copy.exponent++;
             result.exponent++;
         }
@@ -266,115 +239,132 @@ namespace LongNums {
         result.exponent -= one.exponent - 1;
 
         size_t numSize = 0;
-        size_t totalPrecision = MAX(LongFloat::precision, 500) + MAX(0, result.exponent);
+        size_t totalPrecision = (precision + 2) + MAX(0, result.exponent);
 
         do {
-            int div = 0;
+            numType div = 0;
             while (one >= copy) {
                 div++;
                 one = (one - copy);
             }
             one.exponent++;
-            one.deleteZeros();
+            one._deleteZeros();
             result.nums.push_back(div);
             numSize++;
         } while (one != LongFloat() && numSize < totalPrecision);
         return result;
     }
 
-    int operator<=>(const LongFloat &lf1, const LongFloat &lf2) {
+    bool operator>(const LongFloat &lf1, const LongFloat &lf2) {
         if (lf1.sign != lf2.sign)
-        {
-            return (lf1.sign < lf2.sign) ? -1 : 1;
-        }
-
+            return lf1.sign > lf2.sign;
         if (lf1.exponent != lf2.exponent)
-        {
-            return ((lf1.exponent > lf2.exponent) ^ (lf1.sign) ? -1: 1);
-        }
+            return (lf1.exponent > lf2.exponent) ^ (lf1.sign == -1);
 
-        LongFloat lf1Copy{ lf1 };
-        LongFloat lf2Copy{ lf2 };
-        while (lf1Copy.nums.size() > lf2Copy.nums.size())
-        {
+        std::vector<LongFloat::numType> nums1(lf1.nums);
+        std::vector<LongFloat::numType> nums2(lf2.nums);
+        size_t maxNumSize = MAX(nums1.size(), nums2.size());
+
+        while (nums1.size() != maxNumSize)
+            nums1.push_back(0);
+
+        while (nums2.size() != maxNumSize)
+            nums2.push_back(0);
+
+        for (size_t iter = 0; iter < maxNumSize; iter++) {
+            if (nums1[iter] != nums2[iter]) {
+                return (nums1[iter] > nums2[iter]) ^ (lf1.sign == -1);
+            }
+        }
+        return false;
+    }
+
+    bool operator==(const LongFloat &lf1, const LongFloat &lf2) {
+        if (lf1.nums.size() == lf2.nums.size() && lf1.nums.empty() && lf1.exponent == 0)
+            return true;
+
+        if (lf1.sign != lf2.sign || lf1.exponent != lf2.exponent)
+            return false;
+
+        LongFloat lf1Copy{lf1};
+        LongFloat lf2Copy{lf2};
+        while (lf1Copy.nums.size() > lf2Copy.nums.size()) {
             lf2Copy.nums.push_back(0);
         }
 
-        while (lf1Copy.nums.size() < lf2Copy.nums.size())
-        {
+        while (lf1Copy.nums.size() < lf2Copy.nums.size()) {
             lf1Copy.nums.push_back(0);
         }
 
-        for (int32_t i{ 0 }; i < std::min(LongFloat::getPrecision(), (int)lf1.nums.size()); i++)
-        {
-            if (lf1Copy.nums[i] != lf2Copy.nums[i])
-            {
-                return ((lf1Copy.nums[i] > lf2Copy.nums[i]) ^ ((lf1Copy.sign) ? -1 : 1));
+        for (int i = 0; i < std::min(LongFloat::getPrecision() + lf1.exponent, (long long) lf1.nums.size()); i++) {
+            if (lf1Copy.nums[i] != lf2Copy.nums[i]) {
+                return false;
             }
         }
-        return 0;
+        return true;
+    }
+
+    int operator<=>(const LongFloat &lf1, const LongFloat &lf2) {
+        if (lf1 == lf2)
+            return 0;
+        if (lf1 > lf2)
+            return 1;
+        return -1;
     }
 
     LongFloat &LongFloat::operator=(const LongFloat &other) {
         if (&other != this) {
             sign = other.sign;
             exponent = other.exponent;
-            nums = std::vector<int>(other.nums);
+            nums = std::vector<numType>(other.nums);
         }
         return *this;
     }
 
     LongFloat operator/(const LongFloat &lf1, const LongFloat &lf2) {
+
         LongFloat lf2_inverse = LongFloat(lf2).getReciprocal();
         LongFloat result = lf1 * lf2_inverse;
 
-        size_t iter = result.nums.size() - 1 - MAX(0, lf1.exponent);
-        size_t n = MAX(0, result.exponent);
-
-        if (iter > n && result.nums[iter] == 9) {
-            while (iter > n && result.nums[iter] == 9) {
-                iter--;
-            }
-            if (result.nums[iter] == 9) {
-                result.nums.erase(result.nums.begin() + n, result.nums.end());
-                result = result + LongFloat(std::to_string(result.sign));
-            } else {
-                result.nums.erase(result.nums.begin() + iter + 1, result.nums.end());
-                result.nums[iter]++;
-            }
-        }
-        result.deleteZeros();
+        auto leaveDigits{(result.exponent > 0 ? result.exponent : 0) +
+                         LongFloat::precision + 1};
+        result.nums.resize(std::min(
+                static_cast<int64_t>(result.nums.size()), leaveDigits));
+        result._deleteZeros();
         return result;
     }
 
     std::string LongFloat::toString() const {
+        LongFloat rounded = this->round();
+        rounded._deleteZeros();
+
         std::string result;
 
-        if (sign == -1)
+        if (rounded.sign == -1)
             result += '-';
 
-        if (exponent > 0) {
+        if (rounded.exponent > 0) {
             int iter = 0;
 
-            while (iter < nums.size() && iter < exponent)
-                result += intToChar(nums[iter++]);
+            while (iter < rounded.nums.size() && iter < rounded.exponent)
+                result += _intToChar(rounded.nums[iter++]);
 
-            while (iter < exponent) {
+            while (iter < rounded.exponent) {
                 result += "0";
                 iter++;
             }
 
-            if (iter < nums.size()) {
+            if (iter < rounded.nums.size()) {
                 result += ".";
-                while (iter < nums.size() && iter < precision + exponent)
-                    result += intToChar(nums[iter++]);
+                while (iter < rounded.nums.size() && iter < precision + rounded.exponent)
+                    result += _intToChar(rounded.nums[iter++]);
             }
         } else {
             result += "0.";
-            for (int i = 0; i < -exponent; i++)
+            for (int i = 0; i < -rounded.exponent; i++)
                 result += "0";
-            for (int i = 0; i < precision + exponent; i++)
-                result += intToChar(nums[i]);
+            for (int i = 0; i < MIN(precision + rounded.exponent, nums.size()); i++)
+                result += _intToChar(rounded.nums[i]);
         }
         return result;
     }
@@ -383,7 +373,7 @@ namespace LongNums {
         return LongFloat(std::string(str));
     }
 
-    int LongFloat::getPrecision(){
+    int LongFloat::getPrecision() {
         return LongFloat::precision;
     }
 
@@ -404,13 +394,31 @@ namespace LongNums {
                 else
                     R = result;
             }
+            result._deleteZeros();
             return result;
         }
         return NAN;
     }
 
-    bool operator==(const LongFloat &lf1, const LongFloat &lf2) {
-        return lf1.toString() == lf2.toString();
+    LongFloat LongFloat::round() const {
+        LongFloat result{*this};
+        long long lastNumIdx{(result.exponent - 1) + precision};
+        if (!result.nums.empty() && lastNumIdx >= 0 && lastNumIdx < result.nums.size() - 1) {
+            numType afterLast = result.nums[lastNumIdx + 1];
+            if (afterLast >= 5)
+                result = result + LongFloat("0." + std::string(precision - 1, '0') + "1");
+            result.nums.erase(result.nums.begin() + lastNumIdx + 1, result.nums.end());
+        }
+        result._deleteZeros();
+        return result;
+    }
+
+    void LongFloat::setDefaultPrecision() {
+        precision = 1000;
+    }
+
+    bool LongFloat::isEqual(const LongFloat &other) {
+        return this->toString() == other.toString();
     }
 
 }
