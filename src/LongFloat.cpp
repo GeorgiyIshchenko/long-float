@@ -66,11 +66,6 @@ namespace LongNums {
             exponent--;
         }
 
-        if (nums.size() == 1 && nums[0] == 0) {
-            sign = 1;
-            exponent = 1;
-        }
-
     }
 
 
@@ -397,7 +392,7 @@ namespace LongNums {
             result._deleteZeros();
             return result;
         }
-        return NAN;
+        throw std::invalid_argument("Negative num in sqrt");
     }
 
     LongFloat LongFloat::round() const {

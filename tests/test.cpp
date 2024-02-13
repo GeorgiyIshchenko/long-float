@@ -28,6 +28,24 @@ TEST(Operations, Sub2) {
     );
 }
 
+TEST(Operations, Sub3) {
+    EXPECT_EQ(
+            LongFloat("100") - LongFloat(
+                    "100"),
+            LongFloat(
+                    "0")
+    );
+}
+
+TEST(Operations, Sub4) {
+    EXPECT_EQ(
+            LongFloat("1") - LongFloat(
+                    "50"),
+            LongFloat(
+                    "-49")
+    );
+}
+
 TEST(Operations, Inverse) {
     LongFloat::setPrecision(2);
     EXPECT_EQ(
@@ -124,9 +142,18 @@ TEST(Operation, Round2) {
     LongFloat::setDefaultPrecision();
 }
 
-TEST(Operation, ToString) {
+TEST(Operation, ToString1) {
     EXPECT_EQ((-0.0001_LF).toString(), "-0.0001");
 }
+
+TEST(Operation, ToString2) {
+    EXPECT_EQ((228_LF).toString(), "228");
+}
+
+TEST(Operation, ToString3) {
+    EXPECT_EQ((1234_LF * 2_LF).toString(), "2468");
+}
+
 
 TEST(Operation, ZeroEqual1){
     EXPECT_EQ(-0_LF == 0_LF, true);
@@ -154,8 +181,14 @@ TEST(Operation, ZeroDev){
     );
 }
 
-TEST(Operation, Sqrt) {
+TEST(Operation, Sqrt1) {
     LongFloat::setPrecision(10);
     EXPECT_EQ((64_LF).sqrt().isEqual(LongFloat(8)), true);
     LongFloat::setDefaultPrecision();
+}
+
+TEST(Operation, Sqrt2){
+    EXPECT_ANY_THROW(
+            (-5_LF).sqrt();
+    );
 }
