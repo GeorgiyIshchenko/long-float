@@ -59,11 +59,11 @@ namespace LongNums {
         /// @return 1 / LongFloat
         LongFloat getReciprocal();
 
-        /// Cast LongFloat to std::string
-        std::string toString() const;
-
         /// Use to change the precision of specific object
         LongFloat round() const;
+
+        /// Cast LongFloat to std::string
+        std::string toString() const;
 
         // Basic operators to work with nums
 
@@ -79,7 +79,7 @@ namespace LongNums {
         friend int operator<=>(const LongFloat &lf1, const LongFloat &lf2);
         friend bool operator==(const LongFloat &lf1, const LongFloat &lf2);
 
-        // equal with precision
+        /// equal with precision
         bool isEqual(const LongFloat& other);
 
         friend LongFloat operator-(const LongFloat &lf1, const LongFloat &lf2);
@@ -94,7 +94,7 @@ namespace LongNums {
 
         LongFloat sqrt();
 
-        /// Getters and Setters
+        // Getters and Setters
 
         static int getPrecision();
 

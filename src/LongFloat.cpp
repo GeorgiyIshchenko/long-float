@@ -166,11 +166,6 @@ namespace LongNums {
             std::vector<LongFloat::numType> nums1(aBiggerB ? lf1.nums : lf2.nums);
             std::vector<LongFloat::numType> nums2(aBiggerB ? lf2.nums : lf1.nums);
 
-            while (exp1 != maxExp) {
-                nums1.insert(nums1.begin(), 0);
-                exp1++;
-            }
-
             while (exp2 != maxExp) {
                 nums2.insert(nums2.begin(), 0);
                 exp2++;
@@ -343,11 +338,6 @@ namespace LongNums {
 
             while (iter < rounded.nums.size() && iter < rounded.exponent)
                 result += _intToChar(rounded.nums[iter++]);
-
-            while (iter < rounded.exponent) {
-                result += "0";
-                iter++;
-            }
 
             if (iter < rounded.nums.size()) {
                 result += ".";

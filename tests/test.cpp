@@ -46,10 +46,18 @@ TEST(Operations, Sub4) {
     );
 }
 
-TEST(Operations, Inverse) {
+TEST(Operations, Inverse1) {
     LongFloat::setPrecision(2);
     EXPECT_EQ(
-            1_LF * LongFloat(4).getReciprocal(), 0.25_LF
+            LongFloat(4).getReciprocal(), 0.25_LF
+    );
+    LongFloat::setDefaultPrecision();
+}
+
+TEST(Operations, Inverse2) {
+    LongFloat::setPrecision(2);
+    EXPECT_EQ(
+            LongFloat(0.25).getReciprocal(), 4_LF
     );
     LongFloat::setDefaultPrecision();
 }
@@ -57,7 +65,7 @@ TEST(Operations, Inverse) {
 TEST(Operations, Denom) {
     LongFloat::setPrecision(5);
     EXPECT_EQ(
-            LongFloat("5"),LongFloat("10") / LongFloat("2")
+            LongFloat("5"), LongFloat("10") / LongFloat("2")
     );
     LongFloat::setDefaultPrecision();
 }
@@ -65,7 +73,7 @@ TEST(Operations, Denom) {
 TEST(Operations, Denom2) {
     LongFloat::setPrecision(5);
     EXPECT_EQ(
-            LongFloat("3"),LongFloat("120") / LongFloat("40")
+            LongFloat("3"), LongFloat("120") / LongFloat("40")
     );
     LongFloat::setDefaultPrecision();
 }
@@ -77,32 +85,32 @@ TEST(Operations, Multiply) {
 }
 
 TEST(Operations, Equal) {
-    EXPECT_EQ(
-            LongFloat("5") == LongFloat("5.000"), true
+    EXPECT_TRUE(
+            LongFloat("5") == LongFloat("5.000")
     );
 }
 
 TEST(Operations, DifSigns) {
-    EXPECT_EQ(
-            1_LF != -1_LF, true
+    EXPECT_TRUE(
+            1_LF != -1_LF
     );
 }
 
 TEST(Operations, Bigger) {
-    EXPECT_EQ(
-            LongFloat("0.333333333333333333") > LongFloat("0.3"), true
+    EXPECT_TRUE(
+            LongFloat("0.333333333333333333") > LongFloat("0.3")
     );
 }
 
 TEST(Operations, BiggerFalse) {
-    EXPECT_EQ(
-            LongFloat("-0.3") > LongFloat("0.3"), false
+    EXPECT_FALSE(
+            LongFloat("-0.3") > LongFloat("0.3")
     );
 }
 
 TEST(Operations, Smaller) {
-    EXPECT_EQ(
-            LongFloat("0.2") < LongFloat("0.21"), false
+    EXPECT_FALSE(
+            LongFloat("0.2") < LongFloat("0.21")
     );
 }
 
@@ -147,35 +155,35 @@ TEST(Operation, ToString1) {
 }
 
 TEST(Operation, ToString2) {
-    EXPECT_EQ((228_LF).toString(), "228");
+    EXPECT_EQ((228.282_LF).toString(), "228.282");
 }
 
 TEST(Operation, ToString3) {
-    EXPECT_EQ((1234_LF * 2_LF).toString(), "2468");
+    EXPECT_EQ((1000_LF + 200_LF).toString(), "1200");
 }
 
 
-TEST(Operation, ZeroEqual1){
-    EXPECT_EQ(-0_LF == 0_LF, true);
+TEST(Operation, ZeroEqual1) {
+    EXPECT_TRUE(-0_LF == 0_LF);
 }
 
-TEST(Operation, ZeroEqual2){
-    EXPECT_EQ(LongFloat("-0") == 0_LF, true);
+TEST(Operation, ZeroEqual2) {
+    EXPECT_TRUE(LongFloat("-0") == 0_LF);
 }
 
-TEST(Operation, ZeroSum){
+TEST(Operation, ZeroSum) {
     EXPECT_EQ(
             5.1_LF + 0_LF, 5.1_LF
     );
 }
 
-TEST(Operation, ZeroMul){
+TEST(Operation, ZeroMul) {
     EXPECT_EQ(
             5.1_LF * 0_LF, 0_LF
     );
 }
 
-TEST(Operation, ZeroDev){
+TEST(Operation, ZeroDev) {
     EXPECT_ANY_THROW(
             5.1_LF / 0_LF
     );
@@ -183,12 +191,16 @@ TEST(Operation, ZeroDev){
 
 TEST(Operation, Sqrt1) {
     LongFloat::setPrecision(10);
-    EXPECT_EQ((64_LF).sqrt().isEqual(LongFloat(8)), true);
+    EXPECT_TRUE((64_LF).sqrt().isEqual(LongFloat(8)));
     LongFloat::setDefaultPrecision();
 }
 
-TEST(Operation, Sqrt2){
+TEST(Operation, Sqrt2) {
     EXPECT_ANY_THROW(
             (-5_LF).sqrt();
     );
+}
+
+TEST(Operator, Out) {
+    EXPECT_NO_THROW(std::cout << LongFloat("123"));
 }
