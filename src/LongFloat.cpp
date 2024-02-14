@@ -46,6 +46,23 @@ namespace LongNums {
         this->_deleteZeros();
     }
 
+    int LongFloat::getPrecision() {
+        return LongFloat::precision;
+    }
+
+    void LongFloat::setPrecision(int value) {
+        if (value > 0)
+            precision = value;
+    }
+
+    void LongFloat::setDefaultPrecision() {
+        precision = 1000;
+    }
+
+    LongFloat operator ""_LF(const char *str) {
+        return LongFloat(std::string(str));
+    }
+
     LongFloat::numType LongFloat::_charToInt(const char charValue) {
         return charValue - '0';
     }
@@ -68,43 +85,56 @@ namespace LongNums {
 
     }
 
+    LongFloat LongFloat::round() const {
+        LongFloat result{*this};
+        long long lastNumIdx{(result.exponent - 1) + precision};
+        if (!result.nums.empty() && lastNumIdx >= 0 && lastNumIdx < result.nums.size() - 1) {
+            numType afterLast = result.nums[lastNumIdx + 1];
+            if (afterLast >= 5)
+                result = result + LongFloat("0." + std::string(precision - 1, '0') + "1");
+            result.nums.erase(result.nums.begin() + lastNumIdx + 1, result.nums.end());
+        }
+        result._deleteZeros();
+        return result;
+    }
+
+    std::string LongFloat::toString() const {
+        LongFloat rounded = this->round();
+        rounded._deleteZeros();
+
+        std::string result;
+
+        if (rounded.sign == -1)
+            result += '-';
+
+        if (rounded.exponent > 0) {
+            int iter = 0;
+
+            while (iter < rounded.nums.size() && iter < rounded.exponent)
+                result += _intToChar(rounded.nums[iter++]);
+
+            if (iter < rounded.nums.size()) {
+                result += ".";
+                while (iter < rounded.nums.size() && iter < precision + rounded.exponent)
+                    result += _intToChar(rounded.nums[iter++]);
+            }
+        } else {
+            result += "0.";
+            for (int i = 0; i < -rounded.exponent; i++)
+                result += "0";
+            for (int i = 0; i < MIN(precision + rounded.exponent, nums.size()); i++)
+                result += _intToChar(rounded.nums[i]);
+        }
+        return result;
+    }
+
+    bool LongFloat::isEqual(const LongFloat &other) {
+        return this->toString() == other.toString();
+    }
 
     std::ostream &operator<<(std::ostream &os, const LongFloat &lf) {
         os << lf.toString();
         return os;
-    }
-
-    LongFloat operator*(const LongFloat &lf1, const LongFloat &lf2) {
-        size_t len = lf1.nums.size() + lf2.nums.size();
-
-        LongFloat res;
-
-        res.sign = lf1.sign * lf2.sign;
-        res.nums = std::vector<LongFloat::numType>(len, 0);
-        res.exponent = lf1.exponent + lf2.exponent;
-
-        for (int i = 0; i < lf1.nums.size(); i++)
-            for (int j = 0; j < lf2.nums.size(); j++)
-                res.nums[i + j + 1] += lf1.nums[i] * lf2.nums[j];
-
-        for (size_t i = len - 1; i > 0; i--) {
-            res.nums[i - 1] += res.nums[i] / LongFloat::base;
-            res.nums[i] %= LongFloat::base;
-        }
-
-        res._deleteZeros();
-
-        return res;
-    }
-
-    LongFloat LongFloat::operator-() const {
-        if (*this == 0_LF)
-            return *this;
-        LongFloat result;
-        result.sign = -1 * sign;
-        result.exponent = exponent;
-        result.nums = std::vector<numType>(nums);
-        return result;
     }
 
     LongFloat operator+(const LongFloat &lf1, const LongFloat &lf2) {
@@ -156,6 +186,16 @@ namespace LongNums {
         return lf1 - (-lf2);
     }
 
+    LongFloat LongFloat::operator-() const {
+        if (*this == 0_LF)
+            return *this;
+        LongFloat result;
+        result.sign = -1 * sign;
+        result.exponent = exponent;
+        result.nums = std::vector<numType>(nums);
+        return result;
+    }
+
     LongFloat operator-(const LongFloat &lf1, const LongFloat &lf2) {
         if (lf1.sign == 1 && lf2.sign == 1) {
             bool aBiggerB = lf1 > lf2;
@@ -204,6 +244,29 @@ namespace LongNums {
         return lf1 + (-lf2);
     }
 
+    LongFloat operator*(const LongFloat &lf1, const LongFloat &lf2) {
+        size_t len = lf1.nums.size() + lf2.nums.size();
+
+        LongFloat res;
+
+        res.sign = lf1.sign * lf2.sign;
+        res.nums = std::vector<LongFloat::numType>(len, 0);
+        res.exponent = lf1.exponent + lf2.exponent;
+
+        for (int i = 0; i < lf1.nums.size(); i++)
+            for (int j = 0; j < lf2.nums.size(); j++)
+                res.nums[i + j + 1] += lf1.nums[i] * lf2.nums[j];
+
+        for (size_t i = len - 1; i > 0; i--) {
+            res.nums[i - 1] += res.nums[i] / LongFloat::base;
+            res.nums[i] %= LongFloat::base;
+        }
+
+        res._deleteZeros();
+
+        return res;
+    }
+
     LongFloat LongFloat::getReciprocal() {
         if (nums.size() == 1 && nums[0] == 0 || (nums.empty() && exponent == 0))
             throw std::invalid_argument("Division by zero!");
@@ -242,6 +305,36 @@ namespace LongNums {
             result.nums.push_back(div);
             numSize++;
         } while (one != LongFloat() && numSize < totalPrecision);
+        return result;
+    }
+
+    LongFloat operator/(const LongFloat &lf1, const LongFloat &lf2) {
+
+        LongFloat lf2_inverse = LongFloat(lf2).getReciprocal();
+        LongFloat result = lf1 * lf2_inverse;
+
+        auto leaveDigits{(result.exponent > 0 ? result.exponent : 0) +
+                         LongFloat::precision + 1};
+        result.nums.resize(std::min(
+                static_cast<int64_t>(result.nums.size()), leaveDigits));
+        result._deleteZeros();
+        return result;
+    }
+
+    LongFloat LongFloat::sqrt() {
+        if (sign == -1)
+            throw std::invalid_argument("Negative num in sqrt");
+        LongFloat L{};
+        LongFloat R = LongFloat(*this);
+        LongFloat result;
+        for (int i = 0; i < 5 * precision; i++) {
+            result = (L + R) / 2_LF;
+            if (result * result < *this)
+                L = result;
+            else
+                R = result;
+        }
+        result._deleteZeros();
         return result;
     }
 
@@ -309,101 +402,6 @@ namespace LongNums {
             nums = std::vector<numType>(other.nums);
         }
         return *this;
-    }
-
-    LongFloat operator/(const LongFloat &lf1, const LongFloat &lf2) {
-
-        LongFloat lf2_inverse = LongFloat(lf2).getReciprocal();
-        LongFloat result = lf1 * lf2_inverse;
-
-        auto leaveDigits{(result.exponent > 0 ? result.exponent : 0) +
-                         LongFloat::precision + 1};
-        result.nums.resize(std::min(
-                static_cast<int64_t>(result.nums.size()), leaveDigits));
-        result._deleteZeros();
-        return result;
-    }
-
-    std::string LongFloat::toString() const {
-        LongFloat rounded = this->round();
-        rounded._deleteZeros();
-
-        std::string result;
-
-        if (rounded.sign == -1)
-            result += '-';
-
-        if (rounded.exponent > 0) {
-            int iter = 0;
-
-            while (iter < rounded.nums.size() && iter < rounded.exponent)
-                result += _intToChar(rounded.nums[iter++]);
-
-            if (iter < rounded.nums.size()) {
-                result += ".";
-                while (iter < rounded.nums.size() && iter < precision + rounded.exponent)
-                    result += _intToChar(rounded.nums[iter++]);
-            }
-        } else {
-            result += "0.";
-            for (int i = 0; i < -rounded.exponent; i++)
-                result += "0";
-            for (int i = 0; i < MIN(precision + rounded.exponent, nums.size()); i++)
-                result += _intToChar(rounded.nums[i]);
-        }
-        return result;
-    }
-
-    LongFloat operator ""_LF(const char *str) {
-        return LongFloat(std::string(str));
-    }
-
-    int LongFloat::getPrecision() {
-        return LongFloat::precision;
-    }
-
-    void LongFloat::setPrecision(int value) {
-        if (value > 0)
-            precision = value;
-    }
-
-    LongFloat LongFloat::sqrt() {
-        if (sign == 1) {
-            LongFloat L{};
-            LongFloat R = LongFloat(*this);
-            LongFloat result;
-            for (int i = 0; i < 5 * precision; i++) {
-                result = (L + R) / 2_LF;
-                if (result * result < *this)
-                    L = result;
-                else
-                    R = result;
-            }
-            result._deleteZeros();
-            return result;
-        }
-        throw std::invalid_argument("Negative num in sqrt");
-    }
-
-    LongFloat LongFloat::round() const {
-        LongFloat result{*this};
-        long long lastNumIdx{(result.exponent - 1) + precision};
-        if (!result.nums.empty() && lastNumIdx >= 0 && lastNumIdx < result.nums.size() - 1) {
-            numType afterLast = result.nums[lastNumIdx + 1];
-            if (afterLast >= 5)
-                result = result + LongFloat("0." + std::string(precision - 1, '0') + "1");
-            result.nums.erase(result.nums.begin() + lastNumIdx + 1, result.nums.end());
-        }
-        result._deleteZeros();
-        return result;
-    }
-
-    void LongFloat::setDefaultPrecision() {
-        precision = 1000;
-    }
-
-    bool LongFloat::isEqual(const LongFloat &other) {
-        return this->toString() == other.toString();
     }
 
 }
